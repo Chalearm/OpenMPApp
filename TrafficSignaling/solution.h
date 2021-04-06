@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <tgmath.h>
+#include <time.h>
 
 #include "problem.h"
 
@@ -23,6 +24,8 @@ typedef struct solution
 }
 solution_t;
 
+
+void measureTime(const int startOrStop,clock_t *clockBuff,const char *str);
 void   solution_init(solution_t*, problem_t* p);
 int    solution_read(char*, solution_t*, problem_t* p);
 void   solution_write(FILE*, solution_t*, problem_t*);

@@ -4,7 +4,7 @@ CPPFLAGS += -I/usr/X11/include
 
 # CFLAGS
 CFLAGS ?= -g -O3 -march=native -flto
-override CFLAGS += -std=gnu11 -pedantic
+override CFLAGS += -std=gnu11 -pedantic -Xpreprocessor -fopenmp -lomp
 override CFLAGS += -Wall -Wextra
 override CFLAGS += -Wformat=2 -Winit-self -Wswitch-default -Wunused-parameter \
 		-Wuninitialized -Wshadow -Wunsafe-loop-optimizations -Wjump-misses-init \
