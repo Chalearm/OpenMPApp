@@ -9,21 +9,6 @@
 
 static problem_t  p;
 static solution_t s;
-/*
-void measureTime(const int startOrStop,const char *str)
-{
-    static clock_t referenceTime;
-
-    if (startOrStop == 0)
-    {
-      referenceTime = clock();
-    }
-    else
-    {
-      float currentTime = ((float)(clock()-referenceTime))/CLOCKS_PER_SEC;
-      printf("%s time count: %3.2f \n",str,currentTime);
-    }
-}*/
 
 int main(int argc, char* argv[])
 {
@@ -40,31 +25,19 @@ const int loopCount = 4;
   measureTime(0,&clock2,"");
   for(int i = 0;i< loopCount;i++)
   {
-       //  int countStreet[100000];
-//     int factorSlot[100000][5];
 
-  measureTime(0,&clock3,"");
-    memset(countStreet,0,sizeof(countStreet));
-      measureTime(0,&clock1,"");
-      CHECK(problem_read(argv[1], &p) == 0);
-      measureTime(1,&clock1,"problem read ");
-      
+ measureTime(0,&clock3,"");
+  CHECK(problem_read(argv[1], &p) == 0);
+  CHECK(solution_read(argv[2], &s, &p) == 0);
 
-      measureTime(0,&clock1,"");
-      CHECK(solution_read(argv[2], &s, &p) == 0);
-      measureTime(1,&clock1,"solution_read ");
+  CHECK(solution_check(&s, &p) == 0);
+ measureTime(0,&clock1,"");
+  score = solution_score(&s, &p);
+measureTime(1,&clock1,"solution_score ");
+  fprintf(stderr, "Score %d\n", score);
 
-      measureTime(0,&clock1,"");
-      CHECK(solution_check(&s, &p) == 0);
-      measureTime(1,&clock1,"solution_check ");
-
-     // measureTime(0,"");
-      score = solution_score(&s, &p);
-      //measureTime(1,"solution_score ");
-      printf("score : %d \n",score);
-
-      // Write the score file
-      util_write_score(argv[2], score);
+  // Write the score file
+  util_write_score(argv[2], score);
 
 
   measureTime(1,&clock3,"a loop time: ");

@@ -8,7 +8,6 @@
 #include "problem.h"
 
 #define NB_INCOMING_MAX 1000
-
 typedef struct sched
 {
   // ordre et durée de chaque feu
@@ -25,8 +24,6 @@ typedef struct solution
 }
 solution_t;
 
-     int countStreet[100000];
-     int factorSlot[100000][5];
 float measureTime(const int startOrStop,clock_t *clockBuff,const char *str);
 void   solution_init(solution_t*, problem_t* p);
 int    solution_read(char*, solution_t*, problem_t* p);
