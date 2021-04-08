@@ -13,6 +13,7 @@
   #endif
 #endif
 
+     int out1[1000];
 float measureTime(const int startOrStop,clock_t *clockBuff,const char *str)
 { 
     float currentTime= 0.0;
@@ -106,6 +107,8 @@ void simulation_init(const problem_t* const p) {
 
   for (int i = 0; i < p->V; i++) {
     car_state[i].street = p->c[i].streets[0];
+    factorSlot[car_state[i].street][countStreet[car_state[i].street]] = i;
+    countStreet[car_state[i].street]++;
     car_state[i].distance = 0;
     // Queue the car
     street_state[car_state[i].street].nb_cars++;
@@ -166,8 +169,26 @@ int simulation_update_car(const problem_t* const p, int c, int T) {
     car_state[c].nb_streets++;
     // Signal a car left the street
     street_state[car_state[c].street].out = 1;
+    out1[countOut1++] = car_state[c].street;
     // Set the new street where the car is
+    
+    if(countStreet[car_state[c].street]>0){
+    //  printf("remove old \n");
+      if (countStreet[car_state[c].street] > 1)
+      for(int k = 0; k < countStreet[car_state[c].street];k++)
+      {
+        if((factorSlot[car_state[c].street][k] == c) && (k != (countStreet[car_state[c].street]-1)) )
+        {
+          factorSlot[car_state[c].street][k] = factorSlot[car_state[c].street][countStreet[car_state[c].street]-1];
+          break;
+        }
+      }
+
+    countStreet[car_state[c].street]--;
+    }
     car_state[c].street = p->c[c].streets[car_state[c].nb_streets];
+    factorSlot[car_state[c].street][countStreet[car_state[c].street]++] = c;
+
     car_state[c].distance = p->r[car_state[c].street].len - 1;
     // Enqueue the car in the new street
     street_state[car_state[c].street].nb_cars++;
@@ -186,7 +207,12 @@ int simulation_update_car(const problem_t* const p, int c, int T) {
     // Remove the car immediately from the street
     street_state[car_state[c].street].nb_cars--;
     // If another car is in that street and was there before that car, dequeue it
-    for (int i = 0; i < p->V; i++) {
+int countSameStreetCar = 0;
+     for(int i = factorSlot[car_state[c].street][countSameStreetCar];countSameStreetCar < countStreet[car_state[c].street];countSameStreetCar++)
+  // for (int i = 0; i < p->V; i++) 
+     {
+      i = factorSlot[car_state[c].street][countSameStreetCar];
+  	  if (i == c)continue;
       if ((car_state[c].street == car_state[i].street) &&
           (car_state[c].position < car_state[i].position)) {
         car_state[i].position--;
@@ -220,14 +246,23 @@ void simulation_print_state(const problem_t* const p, int T) {
 }
 
 void simulation_dequeue(const problem_t* const p) {
-  for (int street = 0; street < p->S; street++) {
+int street =0 ;
+//for (int street = 0; street < p->S; street++) {
+
+   //   #pragma omp parallel for
+ for(int i = 0;i< countOut1;i++){
+	street = out1[i];
     // If there is a street to dequeue
     if (street_state[street].out == 1) {
       // If a car is in that street, dequeue it
-      for (int c = 0; c < p->V; c++) {
-        if (car_state[c].street == street) {
+  //    for (int c = 0; c < p->V; c++) {
+      for(int i = 0;i < countStreet[street];i++)
+      {
+        int c = factorSlot[street][i];
+      //  if (car_state[c].street == street) {
           car_state[c].position--;
-        }
+        //}
+
       }
       street_state[street].nb_cars--;
       street_state[street].out = 0;
@@ -277,6 +312,7 @@ int simulation_run(const solution_t* const s, const problem_t* const p) {
     #endif
 
     simulation_dequeue(p);
+    countOut1=0;
 
     #ifdef DEBUG_SCORE
     printf("- 4 queues:\n");

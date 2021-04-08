@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
   float ppp = 0.0;  
   clock_t clock1;
   clock_t clock2;
-const int loopCount = 2;
+const int loopCount = 20;
   if (argc != 3) {
     fprintf(stderr, "usage: %s problem solution\n", argv[0]);
     exit(EXIT_FAILURE);
@@ -26,6 +26,7 @@ const int loopCount = 2;
   {
 
  measureTime(0,&clock2,"");
+   memset(countStreet,0,sizeof(countStreet));
   CHECK(problem_read(argv[1], &p) == 0);
   CHECK(solution_read(argv[2], &s, &p) == 0);
 
