@@ -23,7 +23,8 @@ float measureTime(const int startOrStop,clock_t *clockBuff,const char *str)
     else
     {
        currentTime = ((float)(clock()-*clockBuff))/CLOCKS_PER_SEC;
-      printf("%s time count: %3.2f \n",str,currentTime);
+       if (startOrStop == 1)
+        printf("%s time count: %3.2f \n",str,currentTime);
     }
     return currentTime;
 }
