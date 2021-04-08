@@ -13,18 +13,23 @@
     #define DEBUG_SCORE
   #endif
 #endif
-void measureTime(const int startOrStop,clock_t *clockBuff,const char *str)
-{ 
 
+
+    // int out1[1000];
+    // int countOut1;
+float measureTime(const int startOrStop,clock_t *clockBuff,const char *str)
+{ 
+    float currentTime= 0.0;
     if (startOrStop == 0)
     {
       *clockBuff = clock();
     }
     else
     {
-      float currentTime = ((float)(clock()-*clockBuff))/CLOCKS_PER_SEC;
+       currentTime = ((float)(clock()-*clockBuff))/CLOCKS_PER_SEC;
       printf("%s time count: %3.2f \n",str,currentTime);
     }
+    return currentTime;
 }
 int solution_check(solution_t* const s, problem_t* const p) {
   /* OK: errors = 0. */
@@ -68,7 +73,7 @@ int i=0;
         // p->r[rid] contient la rue, vérifie que la rue arrive bien à cette intersection
         if(p->r[rid].end != i)
         {
-         // fprintf(fp, "invalid street number (%d -> \"%s\"): not arriving to the intersection %d\n", rue, name, i);
+          fprintf(fp, "invalid street number (%d -> \"%s\"): not arriving to the intersection %d\n", rue, name, i);
           errors++;
         }
  
@@ -76,7 +81,7 @@ int i=0;
         // durée > 0
         if(s->schedule[i].t[feu].duree <= 0)
         {
-       //   fprintf(fp, "invalid schedule length (intersection %d light %d -> %d)\n", i, feu, s->schedule[i].t[feu].duree);
+          fprintf(fp, "invalid schedule length (intersection %d light %d -> %d)\n", i, feu, s->schedule[i].t[feu].duree);
         } 
     }
   //  printf("i %d - %d, nb_inter_sol:%d\n",i,__LINE__,nb_inter_sol);
@@ -113,6 +118,10 @@ void simulation_init(const problem_t* const p) {
 //#pragma omp parallel for
   for (int i = 0; i < p->V; i++) {
     car_state[i].street = p->c[i].streets[0];
+
+
+    factorSlot[car_state[i].street][countStreet[car_state[i].street]] = i;
+    countStreet[car_state[i].street]++;
     car_state[i].distance = 0;
     // Queue the car
     street_state[car_state[i].street].nb_cars++;
@@ -145,7 +154,8 @@ void simulation_update_intersection_lights(const solution_t* const s, int i, int
 
   // Set the light state
 
-  for (int l = 0; l < s->schedule[i].nb; l++) {
+  for (int l = 0; l < s->schedule[i].nb; l++) 
+  {
     // Remove duration, if we get below zero, this light is green and others are red
     tick -= s->schedule[i].t[l].duree;
     //printf("light %d, tick %d, duree %d\n", l, tick,  s->schedule[i].t[l].duree);
@@ -167,9 +177,19 @@ void simulation_update_intersection_lights(const solution_t* const s, int i, int
 }
 
 int simulation_update_car(const problem_t* const p, int c, int T) {
+      static long long kkkk = 0;
+    static clock_t refClock;
+    static clock_t accumlationClk = 0;
+    refClock = clock();
   // If already arrived, nothing to do
   if (car_state[c].arrived == 1)
+  {
+
+    accumlationClk += (clock() - refClock);
+
+   if(kkkk > 18070998){ printf("roundA %lu, time:%3.4f , clock():%lu, %lu accumlationClk:%lu\n",kkkk,((float)(accumlationClk))/CLOCKS_PER_SEC,clock(),refClock,accumlationClk);kkkk=0;}
     return 0;
+  }
 
   // If at the end of street, light green, queue 1 then move to next street
   if ((car_state[c].distance == 0) &&
@@ -179,8 +199,27 @@ int simulation_update_car(const problem_t* const p, int c, int T) {
     car_state[c].nb_streets++;
     // Signal a car left the street
     street_state[car_state[c].street].out = 1;
+  //  out1[countOut1++] = car_state[c].street;
     // Set the new street where the car is
+    /*
+    if(countStreet[car_state[c].street]>0){
+    //  printf("remove old \n");
+      if (countStreet[car_state[c].street] > 1)
+      for(int k = 0; k < countStreet[car_state[c].street];k++)
+      {
+        if((factorSlot[car_state[c].street][k] == c) && (k != (countStreet[car_state[c].street]-1)) )
+        {
+          factorSlot[car_state[c].street][k] = factorSlot[car_state[c].street][countStreet[car_state[c].street]-1];
+          break;
+        }
+      }
+
+    countStreet[car_state[c].street]--;
+    }
+*/
     car_state[c].street = p->c[c].streets[car_state[c].nb_streets];
+    //factorSlot[car_state[c].street][countStreet[car_state[c].street]++] = c;
+
     car_state[c].distance = p->r[car_state[c].street].len - 1;
     // Enqueue the car in the new street
     street_state[car_state[c].street].nb_cars++;
@@ -201,15 +240,75 @@ int simulation_update_car(const problem_t* const p, int c, int T) {
     // If another car is in that street and was there before that car, dequeue it
 
 //#pragma omp parallel for
-    for (int i = 0; i < p->V; i++) {
+    static int kopp = 0;
+    static int kopp2 = 0;
+    static int positionMaximum = -500;
+    static int streetMaximum = -1000;
+    int nothingShit = 0;
+     int countSameStreetCar = 0;
+     static int maxRound = 0;
+    static int aaaaaaa = -20;
+   // #pragma omp parallel for num_threads(2)
+  //  for(int j = 0;j< 4;j++)
+ //   for (int i = iArry[j]; i < iArry[j+1]; i++)
+    int countIndex = 0;
+    // for(int i = factorSlot[car_state[c].street][countSameStreetCar];countSameStreetCar < countStreet[car_state[c].street];countSameStreetCar++)
+   for (int i = 0; i < p->V; i++) 
+     {
+  //   i = factorSlot[car_state[c].street][countSameStreetCar];
   //  printf("i: %d ",i);
+
+  /*
+      if (aaaaaaa <countStreet[car_state[i].street])
+      {
+        aaaaaaa = countStreet[car_state[i].street];
+        printf("max count : %d , street:%d\n",aaaaaaa,car_state[i].street);
+      }
+      if (positionMaximum < car_state[i].position )
+      {
+        positionMaximum = car_state[i].position;
+        printf("max Pos is %d, i:%d c:%d\n",car_state[i].position,i,c);
+      }
+      if (streetMaximum < car_state[i].street)
+      {
+        streetMaximum = car_state[i].street;
+        printf("max str is %d, i:%d c:%d\n",car_state[i].street,i,c);
+      }
+      */
+      /*
+      if(countStreet[car_state[c].street] <= 1){break;}
+      else if (countSameStreetCar < countStreet[car_state[c].street])
+      {
+        i = factorSlot[car_state[c].street][countSameStreetCar++];
+      }
+      else
+      {
+        break;
+      }
+      */
+  //    if (i == c)continue;
+      
       if ((car_state[c].street == car_state[i].street) &&
           (car_state[c].position < car_state[i].position)) {
         car_state[i].position--;
+      nothingShit = 1;
+     // printf("here: %d , i :%d\n",kopp++,i);
       }
+      countIndex++;
     }
+    if (maxRound < countIndex){maxRound = countIndex;printf("maxRound :%d\n",maxRound);}
+   // if(nothingShit == 0)printf("shit! r:%d, p->V:%d\n",kopp2++,p->V);
+    accumlationClk += (clock() - refClock);
+
+if(kkkk > 18070998){printf("roundB %lu, time:%3.4f , clock():%lu, %lu accumlationClk:%lu\n",kkkk,((float)(accumlationClk))/CLOCKS_PER_SEC,clock(),refClock,accumlationClk);kkkk=0;}
+kkkk++;
     return p->F + (p->D - (T + 1));
   }
+
+    accumlationClk += (clock() - refClock);
+
+   if(kkkk > 18070998) {printf("roundC %lu, time:%3.4f , clock():%lu, %lu accumlationClk:%lu\n",kkkk,((float)(accumlationClk))/CLOCKS_PER_SEC,clock(),refClock,accumlationClk);kkkk=0;}
+   kkkk++;
 
   return 0;
 }
@@ -237,12 +336,30 @@ void simulation_print_state(const problem_t* const p, int T) {
 
 void simulation_dequeue(const problem_t* const p) {
  // #pragma omp parallel for
-  for (int street = 0; street < p->S; street++) {
+    static clock_t refClock;
+    static clock_t accumlationClk = 0;
+    refClock = clock();
+    static int kkkk = 0;
+ static   int maxStreetOut1 = 0;
+int countStreet111 = 0;
+/*
+out1[countOut1++] 
+*/
+int street =0 ;
+//#pragma omp parallel for
+for (int street = 0; street < p->S; street++) {
+// for(int i = 0;i< countOut1;i++){
+
+  // street = out1[i];
     // If there is a street to dequeue
     if (street_state[street].out == 1) {
+      countStreet111++;
       // If a car is in that street, dequeue it
      // #pragma omp parallel for
       for (int c = 0; c < p->V; c++) {
+      //for(int i = 0;i < countStreet[street];i++)
+      //{
+        //int c = factorSlot[street][i];
         if (car_state[c].street == street) {
           car_state[c].position--;
         }
@@ -251,13 +368,19 @@ void simulation_dequeue(const problem_t* const p) {
       street_state[street].out = 0;
     }
   }
+ // countOut1 = 0;
+if(maxStreetOut1 < countStreet111){maxStreetOut1 = countStreet111;printf("mx street count : %d \n",maxStreetOut1);}
+    accumlationClk += (clock() - refClock);
+    if(kkkk >18069)printf("deq round %d, time:%3.4f , clock():%lu, %lu accumlationClk:%lu\n",kkkk,((float)(accumlationClk))/CLOCKS_PER_SEC,clock(),refClock,accumlationClk);
+    else kkkk = 0;
+    kkkk++;
 }
 
 //#define DEBUG_SCORE
 
 int simulation_run(const solution_t* const s, const problem_t* const p) {
   int score = 0;
-  clock_t clock1;
+  clock_t clock1; 
 
   #ifdef DEBUG_SCORE
   problem_write(stdout, p);
@@ -274,10 +397,11 @@ int simulation_run(const solution_t* const s, const problem_t* const p) {
   // For each time step 
  //  #pragma omp parallel for  
 
-printf("p->D: %d \n",p->D);
+printf("p->D: %d car number(p->V):%d, p->S:%d, s->A:%d\n",p->D,p->V,p->S,s->A);
+
   measureTime(0,&clock1,"");
- // #pragma omp parallel
-  for (int T = 0; T < p->D; T++) {
+ // #pragma omp parallel 
+ for (int T = 0; T < p->D; T++) {
     #ifdef DEBUG_SCORE
     printf("Score: %d\n", score);
     printf("- 1 Init:\n");
@@ -287,12 +411,23 @@ printf("p->D: %d \n",p->D);
     // Update light state for each intersection
 //printf("line : %d \n",__LINE__);
     //  #pragma omp parallel for
-   #pragma omp parallel for num_threads(1) 
-    for (int i = 0; i < s->A; i++) {
+  // #pragma omp parallel for  num_threads(4) 
+          static long long kkkk = 0;
+    static clock_t refClock;
+    static clock_t accumlationClk = 0;
+    refClock = clock();
+
+  //  while(count-- > 0)
+    for (int i = 0; i < s->A; i++) 
+    {
+    //   int tid = omp_get_thread_num();
+      // if(ooo++ < 8001) printf("Hello world from omp thread %d  , j:%d, iArry[j]:%d, s->A:%d\n", tid,j,iArry[j],s->A);
+  //    int i = iArry[j];
       simulation_update_intersection_lights(s, i, T);
     }
-
-
+    accumlationClk += (clock() - refClock);
+    if(kkkk > 18069){ printf("main loop:%d, accumlationClk:%3.2f \n",kkkk,((float)(accumlationClk))/CLOCKS_PER_SEC);kkkk=0;}
+kkkk++;
 
     #ifdef DEBUG_SCORE
     printf("- 2 lights:\n");
@@ -303,7 +438,7 @@ printf("p->D: %d \n",p->D);
     int c;
 //printf("line : %d \n",__LINE__);
   //  #pragma omp parallel for shared(p,T) private(c) reduction(+:score)
-     #pragma omp parallel for reduction(+:score) num_threads(1) 
+  //   #pragma omp parallel for reduction(+:score) num_threads(4) 
     for (c= 0; c < p->V; c++) {
       score += simulation_update_car(p, c, T);
     }
@@ -321,7 +456,7 @@ printf("p->D: %d \n",p->D);
     simulation_print_state(p, T);
     #endif
   }
-  measureTime(1,&clock1,"simulation_init2 ");
+  measureTime(1,&clock1,"simulation_init-2 ");
   return score;
 }
 
