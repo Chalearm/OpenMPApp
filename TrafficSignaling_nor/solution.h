@@ -24,7 +24,6 @@ typedef struct solution
 }
 solution_t;
 
-float measureTime(const int startOrStop,clock_t *clockBuff,const char *str);
 void   solution_init(solution_t*, problem_t* p);
 int    solution_read(char*, solution_t*, problem_t* p);
 void   solution_write(FILE*, solution_t*, problem_t*);
