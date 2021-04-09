@@ -14,21 +14,6 @@
 #endif
 
      int out1[1000];
-float measureTime(const int startOrStop,clock_t *clockBuff,const char *str)
-{ 
-    float currentTime= 0.0;
-    if (startOrStop == 0)
-    {
-      *clockBuff = clock();
-    }
-    else
-    {
-       currentTime = ((float)(clock()-*clockBuff))/CLOCKS_PER_SEC;
-       if (startOrStop == 1)
-        printf("%s time count: %3.2f \n",str,currentTime);
-    }
-    return currentTime;
-}
 int solution_check(solution_t* const s, problem_t* const p) {
   /* OK: errors = 0. */
   int errors = 0;
@@ -208,10 +193,11 @@ int simulation_update_car(const problem_t* const p, int c, int T) {
     street_state[car_state[c].street].nb_cars--;
     // If another car is in that street and was there before that car, dequeue it
 int countSameStreetCar = 0;
-     for(int i = factorSlot[car_state[c].street][countSameStreetCar];countSameStreetCar < countStreet[car_state[c].street];countSameStreetCar++)
+ //     #pragma omp parallel for private(countSameStreetCar) num_threads(1)
+     for(countSameStreetCar = 0;countSameStreetCar < countStreet[car_state[c].street];countSameStreetCar++)
   // for (int i = 0; i < p->V; i++) 
      {
-      i = factorSlot[car_state[c].street][countSameStreetCar];
+      int i = factorSlot[car_state[c].street][countSameStreetCar];
   	  if (i == c)continue;
       if ((car_state[c].street == car_state[i].street) &&
           (car_state[c].position < car_state[i].position)) {
@@ -250,15 +236,20 @@ int street =0 ;
 //for (int street = 0; street < p->S; street++) {
 
    //   #pragma omp parallel for
- for(int i = 0;i< countOut1;i++){
-	street = out1[i];
+//#pragma omp parallel default(none) shared(countOut1,out1,factorSlot,street_state,street,car_state)
+{
+ #pragma omp parallel for 
+ for(int i= 0;i< countOut1;i++){
+ // #pragma omp critical
+	 int street = out1[i];
     // If there is a street to dequeue
     if (street_state[street].out == 1) {
       // If a car is in that street, dequeue it
   //    for (int c = 0; c < p->V; c++) {
-      for(int i = 0;i < countStreet[street];i++)
+    //  #pragma omp parallel for
+      for(int j = 0;j < countStreet[street];j++)
       {
-        int c = factorSlot[street][i];
+        int c = factorSlot[street][j];
       //  if (car_state[c].street == street) {
           car_state[c].position--;
         //}
@@ -267,7 +258,9 @@ int street =0 ;
       street_state[street].nb_cars--;
       street_state[street].out = 0;
     }
+ // #pragma omp cancellation point for
   }
+}
 }
 
 //#define DEBUG_SCORE
@@ -284,6 +277,7 @@ int simulation_run(const solution_t* const s, const problem_t* const p) {
   simulation_init(p);
 
   // For each time step
+  //#pragma omp parallel for
   for (int T = 0; T < p->D; T++) {
     #ifdef DEBUG_SCORE
     printf("Score: %d\n", score);
@@ -292,9 +286,11 @@ int simulation_run(const solution_t* const s, const problem_t* const p) {
     #endif
 
     // Update light state for each intersection
+    #pragma omp parallel for
     for (int i = 0; i < s->A; i++) {
       simulation_update_intersection_lights(s, i, T);
     }
+  //  #pragma omp barrier
 
     #ifdef DEBUG_SCORE
     printf("- 2 lights:\n");
@@ -302,17 +298,28 @@ int simulation_run(const solution_t* const s, const problem_t* const p) {
     #endif
 
     // Update car state
+    //#pragma omp parallel for shared(T,p)
     for (int c = 0; c < p->V; c++) {
-      score += simulation_update_car(p, c, T);
-    }
+      int bbb = simulation_update_car(p, c, T);
+     // #pragma omp critical
+      score += bbb;
+
+    } 
+    //#pragma omp barrier
+
 
     #ifdef DEBUG_SCORE
     printf("- 3 cars (score now = %d):\n", score);
     simulation_print_state(p, T);
     #endif
-
+   // #pragma omp barrier   
+   // if (c == (p->V)){
     simulation_dequeue(p);
     countOut1=0;
+    //}
+    //#pragma omp barrier
+
+  
 
     #ifdef DEBUG_SCORE
     printf("- 4 queues:\n");
