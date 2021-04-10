@@ -1,0 +1,37 @@
+
+
+The file ./subject.pdf contains a description of the programming topic. The directory ./input/ contains input files.
+Note: the input files which are called [a-f]long.txt have been modified to artificially increase the duration of the calculation.
+
+The source files in this directory have been written by a team. This code is not necessarily very pretty to read, but it represents the type of code that a manufacturer could
+ask you to parallelize, without more information than that (codes written within a constrained deadline, not documented, not very clean (!)).
+
+The directory ./out/ contains solution files for each of the problems to be solved.
+
+/******************************************************************************/
+A simple 'make' in the main directory will build the two executables './solver' et './checker'.
+The checker simulates the traffic of cars in a city made up of streets and red lights, as shown in the subject.
+Example of use :
+  $ ./checker input/d.txt out/d_best.out
+  Score 1556815
+
+It can take quite a long time to run as you can see, on the input file d.txt especially (or worse on the dlong.txt file).
+
+/******************************************************************************/
+/******************************************************************************/
+The goal of this project will be to speed it up, as much as possible, by using at your convenience all the techniques and all the material resources at your disposal and that you have handled in parallel programming.
+
+The first difficulty of this project will be to identify the interesting portions of code to parallelize :
+
+No need to parallelize an initialization loop of a few iterations, you won't gain anything! You will not be able to parallelize reads / writes in input and output files either,you will run them sequentially.
+You are completely free to modify, optimize, parallelize in OpenMP and MPI all the code that is between these inputs and outputs: the 'solution_check ()' and 'solution_score()'.
+
+We'll expect you to get the shortest possible execution time for this piece of code, using whatever resources you want to use.
+
+You need to explain your method of parallelization of this code, your choices of parallelization techniques, the characteristics of the machines you used and, of course, an analysis of the performances obtained
+
+/******************************************************************************/
+You need to Focus on :
+- Your parallel code : it need to works, it respects the OpenMP / MPI standards and it is executed in parallel
+- The efficiency of your parallel code, if it is correct of course : you have used the correct parallelization techniques effectively, the execution time is greatly reduced.
+/******************************************************************************/
