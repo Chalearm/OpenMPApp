@@ -1,0 +1,2 @@
+hw.physicalcpu: 2
+hw.logicalcpu: 4

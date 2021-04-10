@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   } 
  
-   memset(countStreet,0,sizeof(countStreet));
+//   memset(countStreet,0,sizeof(countStreet));
   CHECK(problem_read(argv[1], &p) == 0);
   CHECK(solution_read(argv[2], &s, &p) == 0);
 

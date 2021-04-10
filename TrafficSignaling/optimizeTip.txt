@@ -1,0 +1,91 @@
+
+
+approach to optimize concept:
+
+1. find some part of code where consume alot of processing time by following the source code:
+
+clock_t t;
+  int f;
+  t = clock();
+
+/** some part of code **/
+/*
+	for example 
+
+
+	  for (int T = 0; T < p->D; T++) 
+	  {
+	   	...
+	  }
+
+*/
+
+
+  t = clock() - t;
+  printf ("process time : (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
+
+At the code has a lot of execution time
+In case of loops :
+  2. try to run loop by changing the starting index and end index  then the result of program should be the same as the original program
+  	 for example for (i = 0; i < 100; i++){ ... } to 
+
+  	 for (i = 50; i < 100; i++) { ...}
+  	 for (i = 49; i > -1; i--)  {...}
+
+
+  3. see the purpose of the loop
+  	4.1 if it uses for searching some value in array then set some member varaible in the structure for example if the array size is 100,000 but the loop just wants to find only 3-4 elements. it means that the for-loop will waste time for 99996 rounds for doing nothing 
+  		if the condition to find is about checking the integer value and the integer value is not too big or high, the optimization way is to sort (counting sort) the array and modify the for-loop to stop searching after finding the 3-4 elements.
+  		if the value for decision or condition to find the intereting element is floating value, the AVL-tree or Quick sort will be the good choice to use.
+
+
+  		for good example :
+
+
+  	// If another car is in that street and was there before that car, dequeue it
+    for (int i = 0; i < p->V; i++) {
+      if ((car_state[c].street == car_state[i].street) &&
+          (car_state[c].position < car_state[i].position)) {
+        car_state[i].position--;
+      }
+    }
+
+
+    the for-loop is for searching a "street" value in the array "car_state[]" then checking the position value to reduce the value of it
+    So if the car_state[] is sorted by street value, the for-loop will not need to run for whole array then this should be optimized by some sorting algorithm
+
+    moreover, the array index "i" to "i < p->V" this array can be set starting point like the second point (2.) so the loop does not need to check from 0 to last number.
+
+
+    for bad exmaple :
+      for (int l = 0; l < s->schedule[i].nb; l++) {
+    // Remove duration, if we get below zero, this light is green and others are red
+    tick -= s->schedule[i].t[l].duree;
+    //printf("light %d, tick %d, duree %d\n", l, tick,  s->schedule[i].t[l].duree);
+    if (tick < 0) {
+      street_state[s->schedule[i].t[l].rue].green = 1;
+      no_green_light = 0;
+      for (int next = l + 1; next < s->schedule[i].nb; next++) {
+        street_state[s->schedule[i].t[next].rue].green = 0;
+      }
+      break;
+    }
+    street_state[s->schedule[i].t[l].rue].green = 0;
+  }
+
+  this cannot be optimized because the loop depends on the "tick" value that needs to check from the first index to last orderly and the loop is not the kind of searching thing in the array and so. We just leave it.
+
+
+  approach to add the openMP:
+
+  in case of for-loop:
+
+  	1 group the variables which are used in the loop
+  	2 try to change it to local variable in the scope "{ ... }" then the result of the program should be the same
+  		the multithreads require the local variable to avoid race-condition or read/write the same variable in the same time
+  	3 add the "#pragma omp parallel for" on above of the for- loop command
+  		in case some variable needs to share, the option "shared()" or "reduction() will be added the same line of "#pragma omp parallel for"
+  	4 measure time and result that is better or not. if not, just remove it 
+
+
+

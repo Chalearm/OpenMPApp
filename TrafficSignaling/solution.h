@@ -25,7 +25,7 @@ typedef struct solution
 solution_t;
 
      int countStreet[100000];
-     int factorSlot[100000][5];
+     int factorSlot[100000][100];
      
      int countOut1;
 float measureTime(const int startOrStop,clock_t *clockBuff,const char *str);

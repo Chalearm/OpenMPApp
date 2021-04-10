@@ -1,0 +1,4 @@
+Apple clang version 11.0.3 (clang-1103.0.32.59)
+Target: x86_64-apple-darwin20.3.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin

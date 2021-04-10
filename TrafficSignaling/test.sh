@@ -1,5 +1,7 @@
 #!/bin/bash
- 
+name=d
+inputF=input/${name}.txt
+outputF=out/${name}_best.out
 #./checker input/d.txt out/d_best.out
 
 function timediff() {
@@ -30,7 +32,7 @@ function timediff() {
 for i in {1..10}
 do
     start=$(gdate +"%s.%N")
-    ./checker input/d.txt out/d_best.out
+    ./checker $inputF $outputF 
     end=$(gdate +"%s.%N")
 timediff $start $end
 done 
